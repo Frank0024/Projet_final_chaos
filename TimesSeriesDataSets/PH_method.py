@@ -337,6 +337,22 @@ def plot_2D(name, x, y, cmap=plt.cm.viridis):
     plt.savefig(os.path.join(out_dir, name + "_2D.png"), transparent=True, bbox_inches="tight", dpi=350)
     plt.close()
 
+def plot_point_2D(name, x, y, cmap=plt.cm.viridis):
+    colors = cmap(np.linspace(0, 1, len(x)))
+
+    # Tracer les trajectoires avec un gradient de couleur
+    for i in range(len(x) - 1):
+        plt.plot(x[i:i+2], y[i:i+2], color=colors[i], alpha=0.1)
+        plt.scatter(x[i:i+2], y[i:i+2], s=5, marker="o", color=colors[i])
+    plt.xlabel('x', fontsize=16)
+    plt.ylabel('y', fontsize=16)
+
+    out_dir = os.path.join("output", "06_2D_plot")
+    os.makedirs(out_dir, exist_ok=True)
+
+    plt.savefig(os.path.join(out_dir, name + "_2D.png"), transparent=True, bbox_inches="tight", dpi=350)
+    plt.close()
+
 def plot_intercept(name, x_intercept, y_intercept, height, best=True):
     plt.scatter(x_intercept, y_intercept, s=5, marker="o", color=PALETTEB[0], label=f"Points d'intersection au plan z = {height:.2f}")
     plt.xlabel("x", fontsize=16)
