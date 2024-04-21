@@ -1,5 +1,6 @@
 from PH_method import *
 
+
 @nb.njit
 def random_walk_3d(num_steps):
     """
