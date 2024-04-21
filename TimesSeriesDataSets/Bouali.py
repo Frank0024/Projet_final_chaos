@@ -32,8 +32,8 @@ def solve_bouali(x0=0.5, y0=0.5, z0=0.5, dt=0.01, num_steps=1000000):
 
 name ="bouali"
 
-x_graph, y_graph, z_graph = solve_bouali(num_steps=100000)
-plot_3D(name, x_graph, y_graph, z_graph, cmap=plt.cm.cividis)
+#x_graph, y_graph, z_graph = solve_bouali(num_steps=100000)
+#plot_3D(name, x_graph, y_graph, z_graph, cmap=plt.cm.cividis)
 
 x, y, z = solve_bouali(num_steps=1000000)
 

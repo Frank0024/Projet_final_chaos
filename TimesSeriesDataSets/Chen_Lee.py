@@ -32,8 +32,8 @@ def solve_chen_lee(x0=1.0, y0=1.0, z0=1.0, dt=0.01, num_steps=1000000):
 
 name ="chenlee"
 
-x_graph, y_graph, z_graph = solve_chen_lee(num_steps=100000)
-plot_3D(name, x_graph, y_graph, z_graph, cmap=plt.cm.plasma)
+#x_graph, y_graph, z_graph = solve_chen_lee(num_steps=100000)
+#plot_3D(name, x_graph, y_graph, z_graph, cmap=plt.cm.plasma)
 
 x, y, z = solve_chen_lee(num_steps=1000000)
 

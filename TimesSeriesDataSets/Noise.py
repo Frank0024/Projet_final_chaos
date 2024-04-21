@@ -19,8 +19,8 @@ def generate_noise_trajectory(num_points):
 
 name = "noise"
 
-x_graph, y_graph, z_graph = generate_noise_trajectory(num_points=1000)
-plot_3D(name, x_graph, y_graph, z_graph)
+#x_graph, y_graph, z_graph = generate_noise_trajectory(num_points=1000)
+#plot_3D(name, x_graph, y_graph, z_graph)
 
 x, y, z = generate_noise_trajectory(num_points=10000)
 

@@ -41,8 +41,8 @@ def solve_lorenz(x0=0.0, y0=1.0, z0=1.05, dt=0.01, num_steps=1000000):
 
 name ="lorenz"
 
-x_graph, y_graph, z_graph = solve_lorenz(num_steps=100000)
-plot_3D(name, x_graph, y_graph, z_graph)
+#x_graph, y_graph, z_graph = solve_lorenz(num_steps=100000)
+#plot_3D(name, x_graph, y_graph, z_graph)
 
 x, y, z = solve_lorenz(num_steps=1000000)
 

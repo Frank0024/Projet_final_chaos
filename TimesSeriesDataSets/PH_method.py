@@ -100,7 +100,6 @@ def lmk(x, y, m, k):
     else:
         return 0.0
 
-
 @nb.njit
 def lk(x, y, k):
     """
@@ -166,7 +165,6 @@ def average_difference(points):
     average_diff = total_difference / (n - 1)
     return average_diff
 
-
 def optimise_plane_lk(x, y, z, height_start=5, height_stop=25, step=1, max_diff=True):
     """
     Optimise the plane height to find the height that maximizes the average difference 
@@ -210,6 +208,82 @@ def optimise_plane_lk(x, y, z, height_start=5, height_stop=25, step=1, max_diff=
     return best_height
 
 @nb.njit
+def rk4_step_2d(x, y, dt, function):
+    """
+    Perform one step of the Runge-Kutta 4th order method for solving a 2D system of ODEs.
+
+    Parameters:
+    - x, y: Current x and y values.
+    - dt: Time step.
+    - function: The function that represents the dynamics of the system.
+
+    Returns:
+    - x_new, y_new: New x and y values after one RK4 step.
+    """
+    k1_x, k1_y = function(x, y)
+    k2_x, k2_y = function(x + 0.5 * dt * k1_x, y + 0.5 * dt * k1_y)
+    k3_x, k3_y = function(x + 0.5 * dt * k2_x, y + 0.5 * dt * k2_y)
+    k4_x, k4_y = function(x + dt * k3_x, y + dt * k3_y)
+    x_new = x + (dt / 6.0) * (k1_x + 2 * k2_x + 2 * k3_x + k4_x)
+    y_new = y + (dt / 6.0) * (k1_y + 2 * k2_y + 2 * k3_y + k4_y)
+    return x_new, y_new
+
+@nb.njit
+def find_lk_for_k_2d(x, y, value, ks=np.arange(1, 20)):
+    """
+    Apply the Lk method to compute the trajectory length for various configurations of sliding window sizes, 
+    evaluated at the intercepts with a specified horizontal line on the y-axis.
+
+    Parameters:
+    - x (array of float): The x-coordinates of the trajectory.
+    - y (array of float): The y-coordinates of the trajectory.
+    - value (float): The y-value to find intercepts.
+    - ks (array of int, optional): The range of k-values (window sizes) to use.
+    
+    Returns:
+    - tuple: Two arrays, the first containing the k-values used, and the second containing the logarithm of the Lk lengths.
+    """
+    x_intercept, y_intercept = find_intercepts_2d(x, y, value)
+    l_de_k = np.zeros(len(ks), dtype=np.float64)
+    for i in range(len(ks)):
+        l_de_k[i] = lk(x_intercept, y_intercept, ks[i])
+    return ks, np.log(l_de_k)
+
+@nb.njit
+def optimise_line_y(x, y, value_start=0.1, value_stop=1.0, step=0.1, max_diff=True):
+    """
+    Optimise the y-value to find the value that maximizes the average difference 
+    in the logarithm of the trajectory lengths calculated by the Lk method.
+
+    This function iterates through a range of y-values and determines the value
+    at which the average difference of the logarithm of lengths of trajectories,
+    intercepted at each y-value, is maximized or minimized.
+
+    Parameters:
+    - x (array of float): The x-coordinates of the trajectory.
+    - y (array of float): The y-coordinates of the trajectory.
+    - value_start (float, optional): The starting y-value of interest.
+    - value_stop (float, optional): The ending y-value of interest.
+    - step (float, optional): The increment step between y-values.
+    - max_diff (bool, optional): Whether to maximize (True) or minimize (False) the difference.
+
+    Returns:
+    - float: The y-value that maximizes or minimizes the average difference of the logarithmic lengths.
+    """
+    possible_values = np.arange(value_start, value_stop, step)
+    max_moy = -np.inf if max_diff else np.inf
+    best_value = None
+
+    for value in possible_values:
+        _, l_de_k = find_lk_for_k_2d(x, y, value)
+        moyenne_dy = average_difference(l_de_k)
+        if (max_diff and moyenne_dy > max_moy) or (not max_diff and moyenne_dy < max_moy):
+            max_moy = moyenne_dy
+            best_value = value
+
+    return best_value
+
+@nb.njit
 def rk4_step(x, y, z, dt, function):
     """
     Perform one step of the Runge-Kutta 4th order method for solving a system of ODEs.
@@ -248,10 +322,25 @@ def plot_3D(name, x, y, z, cmap=plt.cm.viridis):
     plt.savefig(os.path.join(out_dir, name + "3D.png"), transparent=True, bbox_inches="tight", dpi=350)
     plt.close()
 
+def plot_2D(name, x, y, cmap=plt.cm.viridis):
+    colors = cmap(np.linspace(0, 1, len(x)))
+
+    # Tracer les trajectoires avec un gradient de couleur
+    for i in range(len(x) - 1):
+        plt.plot(x[i:i+2], y[i:i+2], color=colors[i], lw=0.5)
+    plt.xlabel('x', fontsize=16)
+    plt.ylabel('y', fontsize=16)
+
+    out_dir = os.path.join("output", "06_2D_plot")
+    os.makedirs(out_dir, exist_ok=True)
+
+    plt.savefig(os.path.join(out_dir, name + "_2D.png"), transparent=True, bbox_inches="tight", dpi=350)
+    plt.close()
+
 def plot_intercept(name, x_intercept, y_intercept, height, best=True):
-    plt.scatter(x_intercept, y_intercept, s=5, marker="o", color=PALETTEB[0], label=f"Plan Z = {height:.2f}")
-    plt.xlabel("x intercept", fontsize=16)
-    plt.ylabel("y intercept", fontsize=16)
+    plt.scatter(x_intercept, y_intercept, s=5, marker="o", color=PALETTEB[0], label=f"Points d'intersection au plan z = {height:.2f}")
+    plt.xlabel("x", fontsize=16)
+    plt.ylabel("y", fontsize=16)
     plt.legend(fontsize=14)
     plt.minorticks_on()
     plt.tick_params(axis="both", which="both", direction="in", top=True, right=True, labelsize=14)
@@ -270,8 +359,8 @@ def plot_intercept(name, x_intercept, y_intercept, height, best=True):
 def plot_LK(name, k, l_of_k, height, best=True):
     plt.plot(k, l_of_k, linestyle="-", color=PALETTEB[2], alpha=0.4)
     plt.plot(k, l_of_k, marker='o', linestyle='', color=PALETTEB[2], label=f"Plan Z = {height:.2f}")
-    plt.xlabel("k Values", fontsize=16)
-    plt.ylabel("Log of Lk", fontsize=16)
+    plt.xlabel("k", fontsize=16)
+    plt.ylabel("log(L(k))", fontsize=16)
     plt.legend(fontsize=14)
     plt.minorticks_on()
     plt.tick_params(axis="both", which="both", direction="in", top=True, right=True, labelsize=14)
@@ -282,6 +371,26 @@ def plot_LK(name, k, l_of_k, height, best=True):
     else:
         out_dir = os.path.join("output", "05_worst_LK")
         subname = "_worst_LK.png"
+
+    os.makedirs(out_dir, exist_ok=True)
+    plt.savefig(os.path.join(out_dir, name + subname), transparent=True, bbox_inches="tight")
+    plt.close()
+
+def plot_LK_2D(name, k, l_of_k, height, best=True):
+    plt.plot(k, l_of_k, linestyle="-", color=PALETTEB[3], alpha=0.4)
+    plt.plot(k, l_of_k, marker='o', linestyle='', color=PALETTEB[3], label=f"Plan Z = {height:.2f}")
+    plt.xlabel("k", fontsize=16)
+    plt.ylabel("log(L(k))", fontsize=16)
+    plt.legend(fontsize=14)
+    plt.minorticks_on()
+    plt.tick_params(axis="both", which="both", direction="in", top=True, right=True, labelsize=14)
+
+    if best:
+        out_dir = os.path.join("output", "07_best_LK_2D")
+        subname = "_best_LK_2D.png"
+    else:
+        out_dir = os.path.join("output", "08_worst_LK_2D")
+        subname = "_worst_LK_2D.png"
 
     os.makedirs(out_dir, exist_ok=True)
     plt.savefig(os.path.join(out_dir, name + subname), transparent=True, bbox_inches="tight")
