@@ -26,8 +26,8 @@ def random_walk_3d(num_steps):
 
 name ="randomwalk"
 
-x_graph, y_graph, z_graph = random_walk_3d(num_steps=100000)
-plot_3D(name, x_graph, y_graph, z_graph, cmap=plt.cm.inferno)
+#x_graph, y_graph, z_graph = random_walk_3d(num_steps=100000)
+#plot_3D(name, x_graph, y_graph, z_graph, cmap=plt.cm.inferno)
 
 x, y, z = random_walk_3d(num_steps=100000)
 
